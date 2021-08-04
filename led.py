@@ -121,21 +121,23 @@ def main():
     while True:
         message = "Debug: "
         rect.white()
+        raisedClick = False
 
         # event handling, gets all event from the event queue
         for event in pygame.event.get():
             # only do something if the event is of type QUIT
             if event.type == pygame.QUIT:
                 # change the value to False, to exit the main loop
-                pygame.quit()
-                sys.exit()
+                on_closing()
+                return
 
             if event.type == pygame.MOUSEBUTTONUP:
                 pos = pygame.mouse.get_pos()
                 message+= str(pos)
-                answer = mydialog(app)
+                raisedClick = True
+                #answer = mydialog(app)
                 # print(type(answer)) # tuple
-                print(answer)
+                #print(answer)
         
         rect.mess(message)
  
@@ -154,6 +156,14 @@ def main():
         aLa.set_led(1,RED)
 
         pygame.display.update()
+
+        if raisedClick:
+            answer = mydialog(app)
+            logging.info(answer)
+        try:
+            app.update()
+        except:
+            pass
 
 
 class LedBlock():
@@ -197,9 +207,12 @@ class LedBlock():
         pygame.draw.circle(self.canvas, color , (thisx,thisy), self.led_size/2)
         text_surface = SMALL_FONT.render( str(led_index).zfill(DIGITS_TO_DISPLAY), True, BLACK)
         self.canvas.blit(text_surface, (thisx-(DIGITS_TO_DISPLAY*2+1), thisy-5))
-     
+
 # run the main function only if this module is executed as the main script
 # (if you import this as a module then nothing is executed)
 if __name__=="__main__":
     # call the main function
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        pass
