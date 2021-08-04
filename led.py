@@ -5,6 +5,7 @@ import logging
 from pygame.locals import *
 import random, itertools #this is only here for testing!!!!
 
+from dia import *
 
 logging.basicConfig(level=logging.INFO)
 #logging.basicConfig(level=logging.DEBUG)
@@ -26,7 +27,7 @@ GRAY = (128, 128, 128)
 GAME_FONT = pygame.font.Font("DejaVuSans.ttf", 10)
 SMALL_FONT = pygame.font.Font("DejaVuSans.ttf", 8)
 
-NUM_OF_LEDS = 1200
+NUM_OF_LEDS = 800
 
 DIGITS_TO_DISPLAY = len(str(NUM_OF_LEDS))
 
@@ -69,6 +70,23 @@ class LedArray():
         if not led_in_array:
             raise Exception("Led not found")
 
+
+class TextBoxy():
+    def __init__(self, canvas,  p1,p2,p3=100,p4=50, color = RED, textcolor = BLACK):
+        self.pos = (p1,p2)
+        self.canvas = canvas
+        self.color = color
+        self.textcolor = textcolor
+        #self.rect = Rect(50, 60, 200, 80)
+        self.rect = Rect(p1,p2,p1+p3,p2+p4)
+
+    def mess(self, message):
+        debugpane =  GAME_FONT.render( message, True, self.textcolor)
+        self.canvas.blit(debugpane, self.pos) 
+
+    def white(self):
+        pygame.draw.rect(self.canvas, self.color, self.rect)
+
 # define a main function
 def main():
      
@@ -79,6 +97,7 @@ def main():
     pygame.display.set_icon(logo)
     pygame.display.set_caption("LED brain visualization")
     
+
     # create a surface on screen 
     screen = pygame.display.set_mode((1400,800))
     screen.fill(WHITE) 
@@ -93,9 +112,16 @@ def main():
 
     aLa = LedArray([prefrontalarrayL, prefrontalarrayR, fronttemporoparietalarrayL, fronttemporoparietalarrayR , occiptL, occiptR  ])
 
+    #my gray erase rectangle
+    rect = TextBoxy(screen, 40,700)
+
+
+
     # main loop
     while True:
-        pygame.display.update()
+        message = "Debug: "
+        rect.white()
+
         # event handling, gets all event from the event queue
         for event in pygame.event.get():
             # only do something if the event is of type QUIT
@@ -103,6 +129,16 @@ def main():
                 # change the value to False, to exit the main loop
                 pygame.quit()
                 sys.exit()
+
+            if event.type == pygame.MOUSEBUTTONUP:
+                pos = pygame.mouse.get_pos()
+                message+= str(pos)
+                answer = mydialog(app)
+                # print(type(answer)) # tuple
+                print(answer)
+        
+        rect.mess(message)
+ 
         FramePerSec.tick(FPS)     
              
         prefrontalarrayL.set(2,RED)
@@ -116,6 +152,9 @@ def main():
         aLa.set_led(12,GREEN)
         aLa.set_led(42,BLUE)
         aLa.set_led(1,RED)
+
+        pygame.display.update()
+
 
 class LedBlock():
 
@@ -136,9 +175,6 @@ class LedBlock():
             assert(len(led_seq) == nx*ny)
             self.led_seq = led_seq
 
-        #self.draw()
-
-
     def led_center(self, i, j):
         thisx = self.origin[0]+self.led_size/2*(1+2*i)+self.led_spacing*i
         thisy = self.origin[1]+self.led_size/2*(1+2*j)+self.led_spacing*j+20#some offset
@@ -146,7 +182,7 @@ class LedBlock():
 
     def iterate(self, led_index):
         k = self.led_seq.index(led_index)
-        i= k%self.n[0]## either like this or I switched them
+        i= k%self.n[0]
         j= k//self.n[0]
         logging.debug("i:%d, j:%d, k:%d"%(i,j,k))
         return i,j,k
