@@ -80,7 +80,7 @@ def main():
     pygame.display.set_caption("LED brain visualization")
     
     # create a surface on screen 
-    screen = pygame.display.set_mode((1444400,800))
+    screen = pygame.display.set_mode((1400,800))
     screen.fill(WHITE) 
     prefrontalarrayL = LedBlock(0,0  , 3, 4, canvas = screen, name="Pre-frontal Left" , led_seq=[2,3,4,5,6,7,8,41,9,10,11,1])
     prefrontalarrayR = LedBlock(0,340, 3, 4, canvas = screen, name="Pre-frontal Right", led_seq=[12,13,14,15,16,17,18,42,19,20,21,22])
