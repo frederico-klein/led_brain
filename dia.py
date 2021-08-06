@@ -1,8 +1,7 @@
 __metaclass__= type
 
-import re
+import re, sys
 import logging
-import pygame, sys
 
 try:
     # for Python2

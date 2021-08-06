@@ -1,5 +1,5 @@
 import sys
-import pygame
+#import pygame
 import logging
 
 from dia import *
@@ -29,7 +29,7 @@ BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 GRAY = (128, 128, 128)
 
-NUM_OF_LEDS = 60
+NUM_OF_LEDS = 80
 
 DIGITS_TO_DISPLAY = len(str(NUM_OF_LEDS))
 pixelVirtual = tk.PhotoImage(width=1, height=1)
@@ -73,7 +73,7 @@ def show_vis(): ## at some point will show maybe 3d?
 def main():
     #app = tk.Tk()
 
-    app.geometry("1300x800")
+    app.geometry("1600x800")
     app.title("Brain LEDS")
     app.resizable(width=False,height=False)
     #app.withdraw()
@@ -101,15 +101,39 @@ def main():
     up_button = tk.Button(animation_frame, text = "up")
     up_button.pack(side=tk.TOP, fill=tk.X)
 
+    down_button = tk.Button(animation_frame, text = "down")
+    down_button.pack(side=tk.TOP, fill=tk.X)
 
+    layer_frame = tk.Frame(animation_frame)
+    layer_frame.pack(side=tk.TOP)
+
+    layer_text = tk.Label(layer_frame, text= "Curr. Layer")
+    layer_text.pack(side=tk.LEFT)
+
+    layer_num = tk.Entry(layer_frame,text = "0")
+    layer_num.pack(side=tk.RIGHT)
 
     allLeds = LedBlock(parent = top_frame_left_frame, name="All LEDs 0")
     #allLeds1 = LedBlock(parent = top_frame_left_frame, name="All LEDs 1")
     #allLeds2 = LedBlock(parent = top_frame_left_frame, name="All LEDs 2")
 
     app.protocol("WM_DELETE_WINDOW", on_closing)
-    ok_button = tk.Button(app, text='Start', width=50, command=show_vis)
+
+    lower_frame = tk.Frame(app, relief=tk.RIDGE, borderwidth=1)
+    lower_frame.pack(side=tk.BOTTOM)
+    ok_button = tk.Button(lower_frame, text='Start', width=50, command=show_vis)
     ok_button.pack(side=tk.BOTTOM, anchor=tk.NW, fill="both")
+
+    fps_frame = tk.Frame(lower_frame, relief=tk.RIDGE, borderwidth=1)
+    fps_frame.pack(side=tk.TOP)
+
+    fps_text = tk.Label(fps_frame, text= "FPS")
+    fps_text.pack(side=tk.LEFT)
+
+    fps_num = tk.Entry(fps_frame,text = "30")
+    fps_num.pack(side=tk.RIGHT)
+
+ 
 
     
     # app.update()
