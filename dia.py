@@ -1,5 +1,6 @@
 __metaclass__= type
 
+import re
 import logging
 import pygame, sys
 
@@ -14,29 +15,43 @@ except ImportError:
     from tkinter import ttk
     from tkinter import simpledialog, colorchooser, messagebox
 
+def textohex(color):
+    colorliststr = re.sub(r"\(|\)| ","",color).split(",") 
+    logging.info(colorliststr)
+    colorlist = list(map(int,colorliststr))
+    logging.info(colorlist)
+    r = colorlist[0]
+    g = colorlist[1]
+    b = colorlist[2]
+    hexcolor = '#%02x%02x%02x'%(r,g,b)
+    return (r,g,b), hexcolor
+
 class LedColorDia(simpledialog.Dialog):
-    def __init__(self, parent, title):
+    def __init__(self, parent, title, led):
         self.color = None
         self.hexcolor = None
+        self.led = led
         try:
             super().__init__(parent, title)
         except: ## python 2.7 version. improve if you can.
             simpledialog.Dialog.__init__(self, parent, title)
 
     def body(self, frame):
-        self.colorStringVar = tk.StringVar(frame, value="(0,0,0)")
+        self.color = self.led.color
+        self.hexcolor = textohex(self.color)[1]
+        self.colorStringVar = tk.StringVar(frame, value=self.color)
         self.col_label = tk.Label(frame, width=25, text="Color")
         self.col_label.pack()
         self.col_box = tk.Entry(frame, width=25, textvariable = self.colorStringVar)
         self.col_box.pack()
         #self.col_box['show'] = '*'
-        self.colorButton = tk.Button(frame, text = "col", command = self.choose)
+        self.colorButton = tk.Button(frame, text = "Choose color", command = self.choose)
         self.colorButton.pack()
 
-        return frame
+        return frame 
 
     def choose(self):
-        self.allcolor = colorchooser.askcolor(title="Choose LED Color")
+        self.allcolor = colorchooser.askcolor(title="Choose LED Color", color=self.hexcolor)               
         self.hexcolor = self.allcolor[1]
         self.r = self.allcolor[0][0]
         self.g = self.allcolor[0][1]
@@ -49,6 +64,10 @@ class LedColorDia(simpledialog.Dialog):
     def ok_pressed(self):
         # print("ok")
         self.color = self.col_box.get()
+        ct, self.hexcolor =  textohex(self.color)
+        self.r = ct[0]
+        self.g = ct[1]
+        self.b = ct[2]
         self.destroy()
 
     def cancel_pressed(self):
@@ -65,13 +84,13 @@ class LedColorDia(simpledialog.Dialog):
         self.bind("<Escape>", lambda event: self.cancel_pressed())
 
 
-def leddia(app, i, buttoni):
-    return lambda : mydialog(app, i, buttoni)
+def leddia(app, i, ledi):
+    return lambda : mydialog(app, i, ledi)
 
-def mydialog(app, i, buttoni):
-    dialog = LedColorDia(title="LED state %d"%i, parent=app)
+def mydialog(app, i, ledi):
+    dialog = LedColorDia(title="LED state %d"%i, parent=app, led= ledi)
     logging.info("Color on LED %d to be set to %s"%(i, dialog.color))
-    buttoni['bg'] = dialog.hexcolor
+    ledi.setcolor(dialog.color)
     return dialog.color, dialog.hexcolor
 
 
