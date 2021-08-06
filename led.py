@@ -5,7 +5,7 @@ import logging
 from pygame.locals import *
 import random, itertools #this is only here for testing!!!!
 
-from dia import *
+from dia2 import *
 
 logging.basicConfig(level=logging.INFO)
 #logging.basicConfig(level=logging.DEBUG)
@@ -42,7 +42,7 @@ class LedArray():
         for arr in self.arrays:
             for led in arr.LEDs:
                 if led.index in self.usedleds:
-                    logging.warning("led collision (%d). using a random set to reinitialize led_seq for array: %s"%(led.index), arr.name))
+                    logging.warning("led collision (%d). using a random set to reinitialize led_seq for array: %s"%(led.index, arr.name))
                     remainingleds = set(set(range(NUM_OF_LEDS))-set(self.usedleds))
                     #arr.led_seq = random.sample(remainingleds, arr.num_leds)
                     led_seq = [i for i in itertools.islice(remainingleds, arr.num_leds)]
@@ -59,7 +59,7 @@ class LedArray():
     def set_led(self, led, color):
         led_in_array = []
         for led_array in self.arrays:
-            if led>0 and led in led_array.led_seq:
+            if led>0 and led in led_array.led_seq():
                 led_array.set(led,color)
                 logging.debug("LED: %d found in %s"%(led, led_array.name))
                 led_in_array.append(led_array)

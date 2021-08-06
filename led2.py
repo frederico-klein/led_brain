@@ -32,14 +32,7 @@ GRAY = (128, 128, 128)
 NUM_OF_LEDS = 60
 
 DIGITS_TO_DISPLAY = len(str(NUM_OF_LEDS))
-
-class LedArray(): ### will have the LEDs objs as an array
-    def __init__(self):
-        pass
-
-class LedBlock(): ### will have indices for the LEDs
-    def __init__(self):
-        pass
+pixelVirtual = tk.PhotoImage(width=1, height=1)
 
 class LED(): ### will have the color property, index and the button associated with it. 
     def __init__(self, index, frame):
@@ -50,6 +43,29 @@ class LED(): ### will have the color property, index and the button associated w
     def setcolor(self,color):
         self.color = color
         self.bt['bg'] = textohex(color)[1]
+
+class LedBlock(): ### will have indices for the LEDs
+    def __init__(self, parent, initial_led = 0, num_leds = NUM_OF_LEDS, name="Unnamed block"):
+        self.frame = tk.Frame(parent, relief=tk.RIDGE, borderwidth=1)
+        self.frame.pack(side=tk.TOP, anchor=tk.NW)
+        self.namelabel = tk.Label(self.frame, width=25, text=name)
+        self.namelabel.pack()
+        self.led_button_array = []
+
+        for i in range(initial_led, num_leds):
+            self.led_button_array.append(LED(i,self.frame))
+
+        for i, led in enumerate(self.led_button_array):
+            led.bt['text'] = "" 
+            led.bt['width'] = 10
+            led.bt['height'] = 10
+            led.bt['image'] = pixelVirtual
+            led.bt['command'] = leddia(app, i, led)
+            led.bt.pack(side="left")
+
+class LedArray(): ### will have the LEDs objs as an array
+    def __init__(self):
+        pass
 
 def show_vis(): ## at some point will show maybe 3d?
     pass
@@ -69,27 +85,27 @@ def main():
     canvas.pack()
     img = tk.PhotoImage(file="logo32x32.png")
     canvas.create_image(0,0,anchor=tk.NW, image = img)
-    pixelVirtual = tk.PhotoImage(width=1, height=1)
     
     animation_frame = tk.Frame(top_frame, relief=tk.RIDGE, borderwidth=1)
     animation_frame.pack(side=tk.RIGHT)
-    animation_canvas = tk.Canvas(animation_frame, width = NUM_OF_LEDS, height = 600, bg='#000000')
-    animation_canvas.pack()
+    animation_canvas = tk.Canvas(animation_frame, width = NUM_OF_LEDS, height = 600, bg='#000000')    
+    animation_canvas.pack(side=tk.RIGHT)
+    pattern_img = tk.PhotoImage(file="pattern.png")
+    animation_canvas.create_image(0,0, anchor=tk.NW, image = pattern_img)
 
-    frame = tk.Frame(top_frame_left_frame, relief=tk.RIDGE, borderwidth=1)
-    frame.pack(side=tk.TOP, anchor=tk.NW)
-    led_button_array = []
+    load_button = tk.Button(animation_frame, text = "load")
+    load_button.pack(side=tk.TOP, fill=tk.X)
+    save_button = tk.Button(animation_frame, text = "save")
+    save_button.pack(side=tk.TOP, fill=tk.X)
 
-    for i in range(NUM_OF_LEDS):
-        led_button_array.append(LED(i,frame))
+    up_button = tk.Button(animation_frame, text = "up")
+    up_button.pack(side=tk.TOP, fill=tk.X)
 
-    for i, led in enumerate(led_button_array):
-        led.bt['text'] = "" 
-        led.bt['width'] = 10
-        led.bt['height'] = 10
-        led.bt['image'] = pixelVirtual
-        led.bt['command'] = leddia(app, i, led)
-        led.bt.pack(side="left")
+
+
+    allLeds = LedBlock(parent = top_frame_left_frame, name="All LEDs 0")
+    #allLeds1 = LedBlock(parent = top_frame_left_frame, name="All LEDs 1")
+    #allLeds2 = LedBlock(parent = top_frame_left_frame, name="All LEDs 2")
 
     app.protocol("WM_DELETE_WINDOW", on_closing)
     ok_button = tk.Button(app, text='Start', width=50, command=show_vis)
