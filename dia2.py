@@ -14,10 +14,14 @@ except ImportError:
     from tkinter import ttk
     from tkinter import simpledialog, colorchooser, messagebox
 
-class LedColorDia(simpledialog.Dialog):
+
+class MyDialog(simpledialog.Dialog):
     def __init__(self, parent, title):
+        self.led_id = None
         self.color = None
-        self.hexcolor = None
+        self.led_enabled = None
+        #        super().__init__(parent, title)
+        ##old style for compatibility
         try:
             super().__init__(parent, title)
         except: ## python 2.7 version. improve if you can.
@@ -25,30 +29,43 @@ class LedColorDia(simpledialog.Dialog):
 
     def body(self, frame):
         self.colorStringVar = tk.StringVar(frame, value="(0,0,0)")
+ 
+        # print(type(frame)) # tkinter.Frame
+        self.li_label = tk.Label(frame, width=25, text="Led Index")
+        self.li_label.pack()
+        self.li_box = tk.Entry(frame, width=25)
+        self.li_box.pack()
+
         self.col_label = tk.Label(frame, width=25, text="Color")
         self.col_label.pack()
         self.col_box = tk.Entry(frame, width=25, textvariable = self.colorStringVar)
         self.col_box.pack()
         #self.col_box['show'] = '*'
+
+        self.led_enable = tk.BooleanVar()
+        self.chb = tk.Checkbutton(frame, text="LED enable", variable = self.led_enable)
+        self.chb.pack()
+
         self.colorButton = tk.Button(frame, text = "col", command = self.choose)
         self.colorButton.pack()
 
         return frame
 
     def choose(self):
-        self.allcolor = colorchooser.askcolor(title="Choose LED Color")
-        self.hexcolor = self.allcolor[1]
-        self.r = self.allcolor[0][0]
-        self.g = self.allcolor[0][1]
-        self.b = self.allcolor[0][2]
-        self.color ="(%d,%d,%d)"%(self.r,self.g,self.b)         
+        color = colorchooser.askcolor(title="Choose LED Color")
+        r = color[0][0]
+        g = color[0][1]
+        b = color[0][2]
+        self.color ="(%d,%d,%d)"%(r,g,b) 
         self.colorStringVar.set(self.color)
         #self.col_box.insert(0,self.color)
         logging.info(self.color)
 
     def ok_pressed(self):
         # print("ok")
+        self.led_id = self.li_box.get()
         self.color = self.col_box.get()
+        self.led_enabled = self.led_enable.get()
         self.destroy()
 
     def cancel_pressed(self):
@@ -64,14 +81,32 @@ class LedColorDia(simpledialog.Dialog):
         self.bind("<Return>", lambda event: self.ok_pressed())
         self.bind("<Escape>", lambda event: self.cancel_pressed())
 
+def on_closing():
+    if messagebox.askokcancel("Quit", "Do you want to quit?"):
+        try:
+            app.destroy()
+            pygame.quit()
+            sys.exit()
+        except:
+            pass
 
-def leddia(app, i, buttoni):
-    return lambda : mydialog(app, i, buttoni)
+app = tk.Tk()
 
-def mydialog(app, i, buttoni):
-    dialog = LedColorDia(title="LED state %d"%i, parent=app)
-    logging.info("Color on LED %d to be set to %s"%(i, dialog.color))
-    buttoni['bg'] = dialog.hexcolor
-    return dialog.color, dialog.hexcolor
+app.geometry("300x300")
+app.title("Brain LEDS")
+app.resizable(width=False,height=False)
+#app.withdraw()
+canvas = tk.Canvas(app, width = 180, height = 300)
+canvas.pack()
+img = tk.PhotoImage(file="logo32x32.png")
+canvas.create_image(0,0,anchor=tk.NW, image = img)
+
+app.protocol("WM_DELETE_WINDOW", on_closing)
+
+app.update()
+
+def mydialog(app):
+    dialog = MyDialog(title="LED state", parent=app)
+    return dialog.led_id, dialog.color, dialog.led_enabled 
 
 
