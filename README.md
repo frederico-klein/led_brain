@@ -14,3 +14,27 @@ Each line on the png represents the whole sequence of the LED strip. Lines will 
 - add thread to read png in a loop and write it to leds
 - synchronize that thread with the gui
 - Add main bit which will generate pngs from sequential 3D data
+
+## C version
+
+I've installed the `rpi_ws281x` shared library by compiling it with the options:
+
+     cmake -D BUILD_SHARED=ON ..
+     make
+     sudo make install
+
+Then I changed the references to use the installed version in the test.c
+
+As `"clk.h"` -> `<ws2811/clk.h>`
+
+Removed references to version so I could remove version.h then I compiled with:
+
+    gcc -c test.c -o main.o
+    gcc -o main main.o -lws2811
+
+* note that libws2811.so becomes l (instead of lib) and it loses the .so part as well
+
+To run it you need sudo and `-c` to clear when ending so:
+
+    sudo ./main -c
+
