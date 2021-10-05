@@ -1,7 +1,9 @@
 *.swo
 *.swp
 *.pyc
+*.out
 *.o
+*.h.gch
 bin/
 
 __pycache__/

@@ -43,6 +43,13 @@
 #include <stdarg.h>
 #include <getopt.h>
 
+#include <iostream>
+#include <fstream>
+#include <sstream>
+
+#include <vector>
+#include <iomanip>
+#include <cstdint>
 
 #include <ws2811/clk.h>
 #include <ws2811/gpio.h>
@@ -65,37 +72,17 @@
 
 //#define WIDTH                   8
 //#define HEIGHT                  8
-#define LED_COUNT              60 
+#define LED_COUNT              34
+
+#define ACTUALLY_RUN_IT false
 
 //int width = WIDTH;
 //int height = HEIGHT;
 int led_count = LED_COUNT;
 
-int clear_on_exit = 0;
+ws2811_t ledstring;
 
-ws2811_t ledstring =
-{
-    .freq = TARGET_FREQ,
-    .dmanum = DMA,
-    .channel =
-    {
-        [0] =
-        {
-            .gpionum = GPIO_PIN,
-            .count = LED_COUNT,
-            .invert = 0,
-            .brightness = 255,
-            .strip_type = STRIP_TYPE,
-        },
-        [1] =
-        {
-            .gpionum = 0,
-            .count = 0,
-            .invert = 0,
-            .brightness = 0,
-        },
-    },
-};
+int clear_on_exit = 0;
 
 ws2811_led_t *matrix;
 
@@ -119,7 +106,7 @@ void matrix_clear(void)
         {
             matrix[x] = 0;
         }
-    
+
 }
 
 int dotspos[] = { 0, 1, 2, 3, 4, 5, 6, 7 };
@@ -169,8 +156,6 @@ void matrix_bottom(void)
     }
 }
 
-
-
 static void ctrl_c_handler(int signum)
 {
 	(void)(signum);
@@ -179,10 +164,9 @@ static void ctrl_c_handler(int signum)
 
 static void setup_handlers(void)
 {
-    struct sigaction sa =
-    {
-        .sa_handler = ctrl_c_handler,
-    };
+    struct sigaction sa;
+
+    sa.sa_handler = ctrl_c_handler;
 
     sigaction(SIGINT, &sa, NULL);
     sigaction(SIGTERM, &sa, NULL);
@@ -330,31 +314,142 @@ void parseargs(int argc, char **argv, ws2811_t *ws2811)
 	}
 }
 
+int mat_read(std::vector<std::vector<ws2811_led_t>> *array )
+{
+	std::string line;                    /* string to hold each line */
+ 	std::string filename = "led.csv";
+
+	std::ifstream f (filename);   /* open file */
+	if (!f.is_open()) {     /* validate file open for reading */
+		std::perror (("error while opening file" + filename).c_str());
+	        return -1;
+	}
+
+	while (std::getline (f, line))
+  {
+		std::string val;
+		std::vector<ws2811_led_t> row;
+		std::stringstream s (line);
+	        while (std::getline (s, val, ','))
+                {
+                  ws2811_led_t item = (ws2811_led_t)std::strtoul(val.c_str(), NULL, 0);
+            		  row.push_back (item);
+                }
+
+        	array->push_back (row);
+  }
+  std::cout << "number of frames read from csv:" << array->size() <<"\n";
+    	f.close();
+
+  return  array->size();
+}
+
+
+void update_frame(int frame, ws2811_led_t* matrix, std::vector<std::vector<ws2811_led_t>>* array)
+{
+  std::cout << "hello";
+  std::vector<ws2811_led_t> & row = array->at(frame);
+  for (int x = 0; x < led_count; x++)
+      {
+          matrix[x] = row.at(x);
+      }
+
+  std::cout << "ok";
+
+}
+
+void matrix_render2()
+{
+  int x;
+  for (x = 0; x < led_count; x++)
+      {
+          std::cout << std::setfill('0') << std::setw(8) << std::hex << matrix[x] << "  ";
+      }
+}
+
 
 int main(int argc, char *argv[])
 {
+      matrix = new ws2811_led_t[34];
+
+
+      std::vector<std::vector<ws2811_led_t>> array; /// we are going to load our csv array. lines is number of leds, columns is the number of frames
+      int num_frames = mat_read(&array);
+      // Displays the csv we just read. not really necessary, make it a debug feature
+
+      std::cout << "complete array\n\n";
+      for (auto& row : array)
+        {           /* iterate over rows */
+          for (auto& val : row)        /* iterate over vals */
+                {
+  	               std::cout << std::setfill('0') << std::setw(8) << std::hex << val << "  ";
+                }
+          std::cout << "\n";
+        }
+        std::cout << "me?ok\n";
+
+    ws2811_channel_t channel0;
+    channel0.gpionum = GPIO_PIN;
+    channel0.count 		= LED_COUNT;
+    channel0.invert 		= 0;
+    channel0.brightness = 255;
+    channel0.strip_type = STRIP_TYPE;
+
+std::cout << "got this far\n";
+    ws2811_channel_t channel1;
+    channel1.gpionum    = 0;
+    channel1.count      = 0;
+    channel1.invert     = 0;
+    channel1.brightness = 0;
+
+std::cout << "got here\n";
+    ledstring.freq    = TARGET_FREQ;
+    ledstring.dmanum  = DMA;
+    ledstring.channel[0] = channel0;
+    ledstring.channel[1] = channel1;
+
     ws2811_return_t ret;
 
-//    sprintf(VERSION, "%d.%d.%d", VERSION_MAJOR, VERSION_MINOR, VERSION_MICRO);
+    std::cout << "did this bit\n";
 
     parseargs(argc, argv, &ledstring);
 
-    matrix = malloc(sizeof(ws2811_led_t) * led_count);
 
-    setup_handlers();
 
-    if ((ret = ws2811_init(&ledstring)) != WS2811_SUCCESS)
+    std::cout << "parseargs ok\n";
+
+    //size_t zz = sizeof(ws2811_led_t) * led_count;
+
+    //matrix = (ws2811_led_t*) malloc(zz+1); //really?
+
+    //matrix = new ws2811_led_t[led_count*20];
+
+    if (ACTUALLY_RUN_IT)
     {
-        fprintf(stderr, "ws2811_init failed: %s\n", ws2811_get_return_t_str(ret));
-        return ret;
+      setup_handlers();
+
+      std::cout << "setup handlers ok";
+
+      if ((ret = ws2811_init(&ledstring)) != WS2811_SUCCESS)
+      {
+          fprintf(stderr, "ws2811_init failed: %s\n", ws2811_get_return_t_str(ret));
+          return ret;
+      }
     }
+
+    int frame = 0;
 
     while (running)
     {
-       	matrix_bottom(); 
-        matrix_render();
+        std::cout << "what about this?\n";
+        //    	matrix_bottom(); // this is the old method to updamatrix_render();te the matrix colours, I will use the new one that loads from a csv
+	      update_frame(frame % num_frames ,matrix,&array);
+        std::cout << "update_frame ok\n";
+        //matrix_render();
+        matrix_render2();
+        std::cout << "matrix_render2 ok\n";
 
-        if ((ret = ws2811_render(&ledstring)) != WS2811_SUCCESS)
+        if (ACTUALLY_RUN_IT && (ret = ws2811_render(&ledstring)) != WS2811_SUCCESS)
         {
             fprintf(stderr, "ws2811_render failed: %s\n", ws2811_get_return_t_str(ret));
             break;
@@ -362,6 +457,7 @@ int main(int argc, char *argv[])
 
         // 15 frames /sec
         usleep(1000000 / 15);
+        frame++;
     }
 
     if (clear_on_exit) {
