@@ -29,8 +29,7 @@ As `"clk.h"` -> `<ws2811/clk.h>`
 
 Removed references to version so I could remove version.h then I compiled with:
 
-    gcc -c test.c -o main.o
-    gcc -o bin/main main.o -lws2811
+    g++ -std=c++0x test.c -lws2811
 
 * note that libws2811.so becomes l (instead of lib) and it loses the .so part as well
 
